@@ -1,0 +1,5 @@
+include ':myeventbusindex'
+include ':eventbus_annotation'
+include ':eventbus_compiler'
+rootProject.name='myeventbus'
+include ':app'
