@@ -53,12 +53,13 @@ public class MyEventBus {
 
     public void register(Object subscriber) {
 
-        Class<?> subscriberClass = subscriber.getClass();
-
         List<SubscriberMethod> subscriberMethods = findSubscriberMethod(subscriber);
 
     }
 
+    /**
+     * 通过apt方式来查找
+     */
     private List<SubscriberMethod> findSubscriberMethod(Object subscriber) {
         List<SubscriberMethod> subscriberMethods = CACHE_MAP.get(subscriber);
         if (subscriberMethods != null) {

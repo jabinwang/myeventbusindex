@@ -181,9 +181,9 @@ public class SubscribeProcessor extends AbstractProcessor {
                 String methodName = executableElement.getSimpleName().toString();
                 //参数类型
                 TypeElement parameterElement = (TypeElement) typeUtils.asElement(parameters.get(0).asType());
-                if ( i == entry.getValue().size() -1){
+                if (i == entry.getValue().size() - 1) {
                     format = "new $T($T.class, $S, $T.$L, $T.class)";
-                }else {
+                } else {
                     format = "new $T($T.class, $S, $T.$L, $T.class),\n";
                 }
                 contentCode = contentBlock.add(format,
@@ -202,63 +202,59 @@ public class SubscribeProcessor extends AbstractProcessor {
                         ClassName.get(entry.getKey()),
                         SubscriberMethod.class).add(contentCode)
                         .endControlFlow("))");
-            }else {
+            } else {
                 messager.printMessage(Diagnostic.Kind.ERROR, "错误");
             }
-
-            //全局属性 Map<Class<?>,SubscriberInfo>
-            TypeName fieldType = ParameterizedTypeName.get(ClassName.get(Map.class),
-                    ClassName.get(Class.class),
-                    ClassName.get(SubscriberInfo.class));
-
-            //putIndex 方法参数 putIndex(SubscriberIndex info)
-            ParameterSpec putIndexParameter = ParameterSpec.builder(
-                    ClassName.get(SubscriberInfo.class),
-                    Constants.PUTINDEX_PARAMETER_NAME).build();
-
-            //putIndex : private static void putIndex(SubscriberInfo info)
-            MethodSpec.Builder putIndexMethodBuilder = MethodSpec.methodBuilder(Constants.PUTINDEX_METHOD_NAME)
-                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
-                    .addParameter(putIndexParameter);
-            //SUBSCRIBER_INDEX.put(info.subscriberClass(), info)
-            putIndexMethodBuilder.addStatement("$N.put($N.subscriberClass(), $N)",
-                    Constants.FIELD_NAME,
-                    Constants.PUTINDEX_PARAMETER_NAME,
-                    Constants.PUTINDEX_PARAMETER_NAME);
-
-            //getSubscriberInfo方法参数: Class subscriberClass
-            ParameterSpec subscriberInfoParameter = ParameterSpec.builder(
-                    ClassName.get(Class.class),
-                    Constants.SUBSCRIBERINFO_PARAMETER_NAME).build();
-            //getSubscriberInfo方法：public SubscriberInfo getSubscriberInfo(Class<?> subscriberClass)
-            MethodSpec.Builder subscriberInfoMethodBuilder = MethodSpec.methodBuilder(Constants.SUBSCRIBERINFO_METHOD_NAME)
-                    .addAnnotation(Override.class)
-                    .addModifiers(Modifier.PUBLIC)
-                    .addParameter(subscriberInfoParameter)
-                    .returns(SubscriberInfo.class);
-            //return SUBSCRIBER_INDEX.get(subscriberClass)
-            subscriberInfoMethodBuilder.addStatement("return $N.get($N)",
-                    Constants.FIELD_NAME,
-                    Constants.SUBSCRIBERINFO_PARAMETER_NAME);
-
-            //构建类
-            TypeSpec typeSpec = TypeSpec.classBuilder(className)
-                    .addSuperinterface(ClassName.get(subscriberIndexType))
-                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                    .addStaticBlock(codeBlock.build())
-                    .addField(fieldType, Constants.FIELD_NAME, Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                    .addMethod(putIndexMethodBuilder.build())
-                    .addMethod(subscriberInfoMethodBuilder.build())
-                    .build();
-
-            JavaFile.builder(packageName,
-                    typeSpec)
-                    .build()
-                    .writeTo(filer);
-
-
-
         }
+        //全局属性 Map<Class<?>,SubscriberInfo>
+        TypeName fieldType = ParameterizedTypeName.get(ClassName.get(Map.class),
+                ClassName.get(Class.class),
+                ClassName.get(SubscriberInfo.class));
+
+        //putIndex 方法参数 putIndex(SubscriberIndex info)
+        ParameterSpec putIndexParameter = ParameterSpec.builder(
+                ClassName.get(SubscriberInfo.class),
+                Constants.PUTINDEX_PARAMETER_NAME).build();
+
+        //putIndex : private static void putIndex(SubscriberInfo info)
+        MethodSpec.Builder putIndexMethodBuilder = MethodSpec.methodBuilder(Constants.PUTINDEX_METHOD_NAME)
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+                .addParameter(putIndexParameter);
+        //SUBSCRIBER_INDEX.put(info.subscriberClass(), info)
+        putIndexMethodBuilder.addStatement("$N.put($N.subscriberClass(), $N)",
+                Constants.FIELD_NAME,
+                Constants.PUTINDEX_PARAMETER_NAME,
+                Constants.PUTINDEX_PARAMETER_NAME);
+
+        //getSubscriberInfo方法参数: Class subscriberClass
+        ParameterSpec subscriberInfoParameter = ParameterSpec.builder(
+                ClassName.get(Class.class),
+                Constants.SUBSCRIBERINFO_PARAMETER_NAME).build();
+        //getSubscriberInfo方法：public SubscriberInfo getSubscriberInfo(Class<?> subscriberClass)
+        MethodSpec.Builder subscriberInfoMethodBuilder = MethodSpec.methodBuilder(Constants.SUBSCRIBERINFO_METHOD_NAME)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(subscriberInfoParameter)
+                .returns(SubscriberInfo.class);
+        //return SUBSCRIBER_INDEX.get(subscriberClass)
+        subscriberInfoMethodBuilder.addStatement("return $N.get($N)",
+                Constants.FIELD_NAME,
+                Constants.SUBSCRIBERINFO_PARAMETER_NAME);
+
+        //构建类
+        TypeSpec typeSpec = TypeSpec.classBuilder(className)
+                .addSuperinterface(ClassName.get(subscriberIndexType))
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addStaticBlock(codeBlock.build())
+                .addField(fieldType, Constants.FIELD_NAME, Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .addMethod(putIndexMethodBuilder.build())
+                .addMethod(subscriberInfoMethodBuilder.build())
+                .build();
+
+        JavaFile.builder(packageName,
+                typeSpec)
+                .build()
+                .writeTo(filer);
     }
 
     private boolean check(ExecutableElement method) {
